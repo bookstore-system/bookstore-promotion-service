@@ -1,3 +1,22 @@
 spring:
   application:
     name: bookstore-promotion-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/bookstore_promotion_db?createDatabaseIfNotExist=true}
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8080
+
+jwt:
+  signerKey: "1234567890123456789012345678901234567890123456789012345678901234"
