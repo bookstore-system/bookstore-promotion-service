@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:mysql://promotion-db:3306/bookstore_promotion_db?createDatabaseIfNotExist=true
+    username: root
+    password: password
