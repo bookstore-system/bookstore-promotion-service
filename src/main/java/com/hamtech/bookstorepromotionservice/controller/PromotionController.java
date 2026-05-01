@@ -26,7 +26,7 @@ import java.util.UUID;
  * Bao gồm tạo, cập nhật, xóa khuyến mãi và xác thực mã khuyến mãi
  */
 @RestController
-@RequestMapping("/api/promotions")
+@RequestMapping("/api/v1/promotions")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PromotionController {
