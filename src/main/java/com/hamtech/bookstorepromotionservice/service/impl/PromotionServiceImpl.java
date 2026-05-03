@@ -5,6 +5,8 @@ import com.hamtech.bookstorepromotionservice.exception.ErrorCode;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ValidatePromotionCodeRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
 import com.hamtech.bookstorepromotionservice.model.entity.Promotion;
@@ -242,6 +244,71 @@ public class PromotionServiceImpl implements PromotionService {
             throw new AppException(ErrorCode.BAD_REQUEST);
         }
         return mapToResponse(promotionRepository.save(promotion));
+    }
+
+    @Override
+    @Transactional
+    public ApplyPromotionResponse applyPromotion(ApplyPromotionRequest request) {
+        Optional<Promotion> promotionOpt = promotionRepository.findByCode(request.getCode().toUpperCase());
+        
+        if (promotionOpt.isEmpty()) {
+            return ApplyPromotionResponse.builder()
+                    .isValid(false)
+                    .message("Mã khuyến mãi không tồn tại")
+                    .discountAmount(0.0)
+                    .finalTotal(request.getOrderTotalBeforeDiscount())
+                    .build();
+        }
+
+        Promotion promotion = promotionOpt.get();
+        LocalDate today = LocalDate.now();
+
+        // Kiểm tra chi tiết thay vì dùng isValid() chung chung
+        if (promotion.getStatus() != Promotion.Status.ACTIVE) {
+            return ApplyPromotionResponse.builder()
+                    .isValid(false)
+                    .message("Khuyến mãi hiện không hoạt động")
+                    .discountAmount(0.0)
+                    .finalTotal(request.getOrderTotalBeforeDiscount())
+                    .build();
+        }
+
+        if (today.isBefore(promotion.getStartDate()) || today.isAfter(promotion.getEndDate())) {
+            return ApplyPromotionResponse.builder()
+                    .isValid(false)
+                    .message("Mã khuyến mãi đã hết hạn hoặc chưa có hiệu lực")
+                    .discountAmount(0.0)
+                    .finalTotal(request.getOrderTotalBeforeDiscount())
+                    .build();
+        }
+
+        if (promotion.getUsageCount() >= promotion.getUsageLimit()) {
+            return ApplyPromotionResponse.builder()
+                    .isValid(false)
+                    .message("Mã khuyến mãi đã hết lượt sử dụng")
+                    .discountAmount(0.0)
+                    .finalTotal(request.getOrderTotalBeforeDiscount())
+                    .build();
+        }
+
+        if (request.getOrderTotalBeforeDiscount() < promotion.getMinOrderValue()) {
+            return ApplyPromotionResponse.builder()
+                    .isValid(false)
+                    .message(String.format("Đơn hàng chưa đạt giá trị tối thiểu (%,.0fđ)", promotion.getMinOrderValue()))
+                    .discountAmount(0.0)
+                    .finalTotal(request.getOrderTotalBeforeDiscount())
+                    .build();
+        }
+
+        Double discountAmount = promotion.calculateDiscountAmount(request.getOrderTotalBeforeDiscount());
+        Double finalTotal = request.getOrderTotalBeforeDiscount() - discountAmount;
+
+        return ApplyPromotionResponse.builder()
+                .isValid(true)
+                .message("Áp dụng mã khuyến mãi thành công")
+                .discountAmount(discountAmount)
+                .finalTotal(finalTotal)
+                .build();
     }
 
     private PromotionResponse mapToResponse(Promotion promotion) {
