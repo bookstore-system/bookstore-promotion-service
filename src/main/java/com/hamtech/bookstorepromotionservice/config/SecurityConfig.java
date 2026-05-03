@@ -45,6 +45,7 @@ public class SecurityConfig {
 
                         // Promotions
                         "/api/promotions/**",
+                        "/api/v1/promotions/**",
         };
 
         @Value("${jwt.signerKey}")
