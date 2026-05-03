@@ -3,6 +3,8 @@ package com.hamtech.bookstorepromotionservice.service;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ValidatePromotionCodeRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
 import org.springframework.data.domain.Page;
@@ -61,4 +63,6 @@ public interface PromotionService {
      * Cập nhật trạng thái khuyến mãi (ACTIVE, INACTIVE, EXPIRED)
      */
     PromotionResponse updatePromotionStatus(UUID promotionId, String status);
+
+    ApplyPromotionResponse applyPromotion(ApplyPromotionRequest request);
 }
