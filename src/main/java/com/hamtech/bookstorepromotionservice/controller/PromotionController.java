@@ -3,9 +3,11 @@ package com.hamtech.bookstorepromotionservice.controller;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ValidatePromotionCodeRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.response.ApiResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
+import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.service.PromotionService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -206,6 +208,23 @@ public class PromotionController {
                                 .code(1000)
                                 .message("Cập nhật trạng thái khuyến mãi thành công")
                                 .result(promotion)
+                                .build();
+        }
+
+        /**
+         * Áp dụng mã khuyến mãi cho đơn hàng (Dành cho Order Service)
+         *
+         * @param request Thông tin mã KM và đơn hàng
+         * @return Kết quả hợp lệ và số tiền giảm giá
+         */
+        @PostMapping("/apply")
+        public ApiResponse<ApplyPromotionResponse> applyPromotion(
+                        @Valid @RequestBody ApplyPromotionRequest request) {
+                ApplyPromotionResponse response = promotionService.applyPromotion(request);
+                return ApiResponse.<ApplyPromotionResponse>builder()
+                                .code(response.getIsValid() ? 1000 : 4002)
+                                .message(response.getMessage())
+                                .result(response)
                                 .build();
         }
 }
