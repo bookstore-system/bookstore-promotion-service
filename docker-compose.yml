@@ -3,7 +3,7 @@ services:
     image: mysql:8.0
     container_name: bookstore_promotion_db
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_DATABASE: bookstore_promotion_db
       MYSQL_ROOT_PASSWORD: password
@@ -32,6 +32,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://promotion-db:3306/bookstore_promotion_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
     depends_on:
       promotion-db:
         condition: service_healthy
