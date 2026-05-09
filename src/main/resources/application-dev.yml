@@ -3,3 +3,8 @@ spring:
     url: jdbc:mysql://promotion-db:3306/bookstore_promotion_db?createDatabaseIfNotExist=true
     username: root
     password: password
+
+clients:
+  book-service:
+    # docker: http://book-service:8080 ; host: http://127.0.0.1:8082
+    url: ${BOOK_SERVICE_URL:}
