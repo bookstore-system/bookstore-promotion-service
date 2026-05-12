@@ -1,14 +1,19 @@
 package com.hamtech.bookstorepromotionservice.controller;
 
+import com.hamtech.bookstorepromotionservice.config.OpenApiConfig;
+import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ValidatePromotionCodeRequest;
-import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.response.ApiResponse;
+import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
-import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.service.PromotionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +32,7 @@ import java.util.UUID;
  * Controller xử lý các chức năng liên quan đến khuyến mãi
  * Bao gồm tạo, cập nhật, xóa khuyến mãi và xác thực mã khuyến mãi
  */
+@Tag(name = "Promotions", description = "API quản lý và áp dụng mã khuyến mãi")
 @RestController
 @RequestMapping("/api/v1/promotions")
 @RequiredArgsConstructor
@@ -43,6 +49,8 @@ public class PromotionController {
          *                discountValue, startDate, endDate, minOrderValue
          * @return Thông tin khuyến mãi vừa được tạo
          */
+        @Operation(summary = "Tạo khuyến mãi", description = "Chỉ admin. Tạo mã giảm giá theo % hoặc số tiền cố định.")
+        @SecurityRequirement(name = OpenApiConfig.BEARER_JWT)
         @PostMapping
         public ApiResponse<PromotionResponse> createPromotion(
                         @Valid @RequestBody CreatePromotionRequest request) {
@@ -62,9 +70,11 @@ public class PromotionController {
          * @param request Thông tin cập nhật
          * @return Thông tin khuyến mãi sau khi cập nhật
          */
+        @Operation(summary = "Cập nhật khuyến mãi", description = "Chỉ admin.")
+        @SecurityRequirement(name = OpenApiConfig.BEARER_JWT)
         @PutMapping("/{id}")
         public ApiResponse<PromotionResponse> updatePromotion(
-                        @PathVariable UUID id,
+                        @Parameter(description = "ID khuyến mãi") @PathVariable UUID id,
                         @Valid @RequestBody UpdatePromotionRequest request) {
                 PromotionResponse promotion = promotionService.updatePromotion(id, request);
                 return ApiResponse.<PromotionResponse>builder()
@@ -81,8 +91,11 @@ public class PromotionController {
          * @param id ID của khuyến mãi cần xóa
          * @return Kết quả xóa khuyến mãi
          */
+        @Operation(summary = "Xóa khuyến mãi", description = "Chỉ admin.")
+        @SecurityRequirement(name = OpenApiConfig.BEARER_JWT)
         @DeleteMapping("/{id}")
-        public ApiResponse<Void> deletePromotion(@PathVariable UUID id) {
+        public ApiResponse<Void> deletePromotion(
+                        @Parameter(description = "ID khuyến mãi") @PathVariable UUID id) {
                 promotionService.deletePromotion(id);
                 return ApiResponse.<Void>builder()
                                 .code(1000)
@@ -97,8 +110,11 @@ public class PromotionController {
          * @param id ID của khuyến mãi cần xem
          * @return Thông tin chi tiết của khuyến mãi
          */
+        @Operation(summary = "Chi tiết khuyến mãi theo ID", description = "Chỉ admin.")
+        @SecurityRequirement(name = OpenApiConfig.BEARER_JWT)
         @GetMapping("/{id}")
-        public ApiResponse<PromotionResponse> getPromotionById(@PathVariable UUID id) {
+        public ApiResponse<PromotionResponse> getPromotionById(
+                        @Parameter(description = "ID khuyến mãi") @PathVariable UUID id) {
                 PromotionResponse promotion = promotionService.getPromotionById(id);
                 return ApiResponse.<PromotionResponse>builder()
                                 .code(1000)
@@ -115,10 +131,12 @@ public class PromotionController {
          * @param size Kích thước trang (mặc định: 10)
          * @return Danh sách khuyến mãi được phân trang
          */
+        @Operation(summary = "Danh sách khuyến mãi (phân trang)", description = "Chỉ admin.")
+        @SecurityRequirement(name = OpenApiConfig.BEARER_JWT)
         @GetMapping
         public ApiResponse<Map<String, Object>> getAllPromotions(
-                        @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size) {
+                        @Parameter(description = "Số trang, bắt đầu 0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size) {
                 Pageable pageable = PageRequest.of(page, size);
                 Page<PromotionResponse> promotions = promotionService.getAllPromotions(pageable);
 
@@ -144,6 +162,7 @@ public class PromotionController {
          *
          * @return Danh sách khuyến mãi đang hoạt động
          */
+        @Operation(summary = "Khuyến mãi đang hoạt động", description = "Public: các mã ACTIVE còn hiệu lực.")
         @GetMapping("/active")
         public ApiResponse<List<PromotionResponse>> getActivePromotions() {
                 List<PromotionResponse> promotions = promotionService.getActivePromotions();
@@ -161,9 +180,10 @@ public class PromotionController {
          * @param bookId ID của sách cần xem khuyến mãi
          * @return Danh sách khuyến mãi áp dụng cho sách
          */
+        @Operation(summary = "Khuyến mãi áp dụng cho một sách", description = "Public.")
         @GetMapping("/book/{bookId}")
         public ApiResponse<List<PromotionResponse>> getPromotionsByBookId(
-                        @PathVariable UUID bookId) {
+                        @Parameter(description = "ID sách") @PathVariable UUID bookId) {
                 List<PromotionResponse> promotions = promotionService.getPromotionsByBookId(bookId);
                 return ApiResponse.<List<PromotionResponse>>builder()
                                 .code(1000)
@@ -180,6 +200,7 @@ public class PromotionController {
          * @param request Thông tin xác thực bao gồm promotionCode, orderValue, bookIds
          * @return Kết quả xác thực với thông tin giảm giá nếu hợp lệ
          */
+        @Operation(summary = "Kiểm tra mã khuyến mãi", description = "Public: kiểm tra trước khi đặt hàng.")
         @PostMapping("/validate")
         public ApiResponse<PromotionValidationResponse> validatePromotionCode(
                         @Valid @RequestBody ValidatePromotionCodeRequest request) {
@@ -199,10 +220,12 @@ public class PromotionController {
          * @param status Trạng thái mới (ACTIVE, INACTIVE, EXPIRED)
          * @return Thông tin khuyến mãi sau khi cập nhật trạng thái
          */
+        @Operation(summary = "Đổi trạng thái khuyến mãi", description = "Chỉ admin. Ví dụ: ACTIVE, INACTIVE, EXPIRED.")
+        @SecurityRequirement(name = OpenApiConfig.BEARER_JWT)
         @PatchMapping("/{id}/status")
         public ApiResponse<PromotionResponse> updatePromotionStatus(
-                        @PathVariable UUID id,
-                        @RequestParam String status) {
+                        @Parameter(description = "ID khuyến mãi") @PathVariable UUID id,
+                        @Parameter(description = "Trạng thái mới") @RequestParam String status) {
                 PromotionResponse promotion = promotionService.updatePromotionStatus(id, status);
                 return ApiResponse.<PromotionResponse>builder()
                                 .code(1000)
@@ -217,6 +240,7 @@ public class PromotionController {
          * @param request Thông tin mã KM và đơn hàng
          * @return Kết quả hợp lệ và số tiền giảm giá
          */
+        @Operation(summary = "Áp dụng mã khi tính đơn", description = "Gọi từ Order Service hoặc luồng nội bộ: trả về số tiền giảm nếu hợp lệ.")
         @PostMapping("/apply")
         public ApiResponse<ApplyPromotionResponse> applyPromotion(
                         @Valid @RequestBody ApplyPromotionRequest request) {
