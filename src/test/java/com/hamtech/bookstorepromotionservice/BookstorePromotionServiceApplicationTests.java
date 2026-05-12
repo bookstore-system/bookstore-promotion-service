@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import com.hamtech.bookstorepromotionservice.client.BookServiceClient;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
 
 @SpringBootTest(classes = BookstorePromotionServiceApplication.class, properties = {
@@ -15,6 +16,9 @@ class BookstorePromotionServiceApplicationTests {
 
     @MockBean
     PromotionRepository promotionRepository;
+
+    @MockBean
+    BookServiceClient bookServiceClient;
 
     @Test
     void contextLoads() {
