@@ -1,5 +1,8 @@
 package com.hamtech.bookstorepromotionservice.service.impl;
 
+import com.hamtech.bookstorepromotionservice.client.BookServiceClient;
+import com.hamtech.bookstorepromotionservice.client.BookExistsResponse;
+import com.hamtech.bookstorepromotionservice.client.BookServiceApiResponse;
 import com.hamtech.bookstorepromotionservice.exception.AppException;
 import com.hamtech.bookstorepromotionservice.exception.ErrorCode;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
@@ -12,9 +15,11 @@ import com.hamtech.bookstorepromotionservice.model.dto.response.promotionrespons
 import com.hamtech.bookstorepromotionservice.model.entity.Promotion;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
 import com.hamtech.bookstorepromotionservice.service.PromotionService;
+import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,12 +32,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PromotionServiceImpl implements PromotionService {
 
     PromotionRepository promotionRepository;
+    BookServiceClient bookServiceClient;
 
     @Override
     @Transactional
@@ -64,12 +71,12 @@ public class PromotionServiceImpl implements PromotionService {
             promotion.setStatus(Promotion.Status.ACTIVE);
         }
 
-        // Lưu danh sách ID sách áp dụng
-        if (request.getApplicableBookIds() != null) {
-            promotion.setApplicableBookIds(request.getApplicableBookIds());
-        } else {
-            promotion.setApplicableBookIds(new ArrayList<>());
-        }
+        // Lưu danh sách ID sách áp dụng (null hoặc rỗng = áp dụng mọi sách)
+        List<UUID> applicableIds = request.getApplicableBookIds() != null
+                ? request.getApplicableBookIds()
+                : new ArrayList<>();
+        validateApplicableBookIdsWithBookService(applicableIds);
+        promotion.setApplicableBookIds(applicableIds);
 
         Promotion saved = promotionRepository.save(promotion);
         return mapToResponse(saved);
@@ -123,6 +130,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
         
         if (request.getApplicableBookIds() != null) {
+            validateApplicableBookIdsWithBookService(request.getApplicableBookIds());
             promotion.setApplicableBookIds(request.getApplicableBookIds());
         }
 
@@ -309,6 +317,35 @@ public class PromotionServiceImpl implements PromotionService {
                 .discountAmount(discountAmount)
                 .finalTotal(finalTotal)
                 .build();
+    }
+
+    /**
+     * Gọi book-service khi có ít nhất một ID; null/rỗng nghĩa là không giới hạn sách.
+     */
+    private void validateApplicableBookIdsWithBookService(List<UUID> bookIds) {
+        if (bookIds == null || bookIds.isEmpty()) {
+            return;
+        }
+        try {
+            List<UUID> invalid = new ArrayList<>();
+            for (UUID bookId : bookIds) {
+                BookServiceApiResponse<BookExistsResponse> wrapper = bookServiceClient.checkBookExists(bookId);
+                BookExistsResponse res = wrapper != null ? wrapper.getData() : null;
+                if (res == null || !res.isExists()) {
+                    invalid.add(bookId);
+                }
+            }
+            if (!invalid.isEmpty()) {
+                throw new AppException(
+                        ErrorCode.BOOK_IDS_INVALID,
+                        ErrorCode.BOOK_IDS_INVALID.getMessage() + " Các ID không hợp lệ: " + invalid);
+            }
+        } catch (AppException e) {
+            throw e;
+        } catch (FeignException e) {
+            log.warn("Book service checkBookExists failed: status={} message={}", e.status(), e.getMessage());
+            throw new AppException(ErrorCode.SERVICE_UNAVAILABLE);
+        }
     }
 
     private PromotionResponse mapToResponse(Promotion promotion) {
