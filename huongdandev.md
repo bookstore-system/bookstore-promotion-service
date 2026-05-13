@@ -97,6 +97,52 @@ Khi tính năng đã sẵn sàng để triển khai, thực hiện quy trình bu
 
 ---
 
+## 5. Bookstore Promotion Service — Kiểm thử (Unit test, Swagger, Feign)
+
+Áp dụng khi làm việc trong thư mục `bookstore-promotion-service`.
+
+### 5.1. Chạy unit test (Maven Wrapper)
+
+```powershell
+cd bookstore-promotion-service
+.\mvnw.cmd test
+```
+
+Các lớp test chính:
+
+| Lớp | Mục đích |
+|-----|----------|
+| `PromotionControllerTest` | `@WebMvcTest` — kiểm tra HTTP mapping và JSON của REST promotion |
+| `BookServiceClientTest` | `@SpringBootTest` + `MockWebServer` — kiểm tra Feign `BookServiceClient` gọi đúng `POST /api/v1/books/validate-ids` và parse body |
+| `BookstorePromotionServiceApplicationTests` | Load context ứng dụng |
+
+Chạy một lớp cụ thể:
+
+```powershell
+.\mvnw.cmd test -Dtest=BookServiceClientTest
+```
+
+### 5.2. Swagger UI và OpenAPI (sau khi chạy app)
+
+1. Khởi động MySQL (docker compose hoặc instance local) và cấu hình `application.yaml` / profile `dev` cho đúng DB.
+2. Chạy ứng dụng (IDE hoặc `.\mvnw.cmd spring-boot:run`).
+3. Mở trình duyệt:
+   - **Swagger UI:** `http://localhost:8080/swagger-ui.html` (hoặc `http://localhost:8080/swagger-ui/index.html` tùy phiên bản Springdoc).
+   - **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`.
+
+Các endpoint quản trị được gắn **Authorize** (JWT Bearer) trên tài liệu API; bấm **Authorize**, dán token dạng `Bearer <jwt>` hoặc chỉ phần JWT tùy giao diện Springdoc, rồi thử **Try it out** trên các API admin.
+
+### 5.3. Kiểm tra tích hợp Feign → Book Service
+
+`BookServiceClient` gọi book-service tại URL `clients.book-service.url` (biến môi trường `BOOK_SERVICE_URL` trong `application-dev.yml`).
+
+- **Docker:** đặt URL tới container book service, ví dụ `http://book-service:8080`.
+- **Chạy book-service trên máy:** ví dụ `http://127.0.0.1:8082` (đúng với port thực tế của bạn).
+
+Sau đó gọi luồng nghiệp vụ promotion có validate `bookIds` (tạo/cập nhật KM có danh sách sách) để xác nhận book-service phản hồi và promotion-service không lỗi kết nối.
+
+---
+
 ## Phụ lục: Mẫu Cấu hình Database (MySQL)
 
 Dưới đây là mẫu định nghĩa database cho một service mới (ví dụ: `book-db`):

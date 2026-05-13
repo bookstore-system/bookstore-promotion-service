@@ -31,6 +31,7 @@ public enum ErrorCode {
     PROMOTION_CODE_NOT_APPLICABLE(HttpStatus.BAD_REQUEST, 4005, "Mã khuyến mãi không áp dụng cho sản phẩm này."),
     PROMOTION_CODE_ALREADY_EXISTS(HttpStatus.CONFLICT, 4006, "Mã khuyến mãi đã tồn tại."),
     PROMOTION_INACTIVE(HttpStatus.BAD_REQUEST, 4007, "Khuyến mãi đang không hoạt động."),
+    BOOK_IDS_INVALID(HttpStatus.BAD_REQUEST, 4008, "Một hoặc nhiều ID sách không tồn tại."),
 
     // ==== Lỗi hệ thống không phân loại ====
     UNCATEGORIZED_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, 9999, "Lỗi không xác định"),

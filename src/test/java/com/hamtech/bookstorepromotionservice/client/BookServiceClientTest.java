@@ -14,7 +14,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -65,37 +64,36 @@ class BookServiceClientTest {
     BookServiceClient bookServiceClient;
 
     @Test
-    void validateBookIds_postsRequest_andReadsResponse() throws Exception {
-        UUID id1 = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-        UUID id2 = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
+    void checkBookExists_getsRequest_andReadsResponse() throws Exception {
+        UUID bookId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader("Content-Type", "application/json")
                 .setBody("""
                         {
-                          "allValid": true,
-                          "invalidBookIds": []
+                          "code": 200,
+                          "message": "Success",
+                          "data": {
+                            "exists": true,
+                            "bookId": "123e4567-e89b-12d3-a456-426614174000",
+                            "title": "Clean Code"
+                          }
                         }
                         """));
 
-        ValidateBookIdsRequest req = new ValidateBookIdsRequest();
-        req.setBookIds(List.of(id1, id2));
-
-        ValidateBookIdsResponse res = bookServiceClient.validateBookIds(req);
-
-        assertThat(res.isAllValid()).isTrue();
-        assertThat(res.getInvalidBookIds()).isEmpty();
+        BookServiceApiResponse<BookExistsResponse> wrapper = bookServiceClient.checkBookExists(bookId);
+        assertThat(wrapper).isNotNull();
+        assertThat(wrapper.getCode()).isEqualTo(200);
+        assertThat(wrapper.getData()).isNotNull();
+        assertThat(wrapper.getData().isExists()).isTrue();
+        assertThat(wrapper.getData().getBookId()).isEqualTo(bookId);
+        assertThat(wrapper.getData().getTitle()).isEqualTo("Clean Code");
 
         RecordedRequest recorded = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
         assertThat(recorded).isNotNull();
-        assertThat(recorded.getMethod()).isEqualTo("POST");
-        assertThat(recorded.getPath()).isEqualTo("/api/v1/books/validate-ids");
-
-        String body = recorded.getBody().readUtf8();
-        assertThat(body).contains("\"bookIds\"");
-        assertThat(body).contains(id1.toString());
-        assertThat(body).contains(id2.toString());
+        assertThat(recorded.getMethod()).isEqualTo("GET");
+        assertThat(recorded.getPath()).isEqualTo("/api/v1/books/" + bookId + "/exists");
     }
 }
 

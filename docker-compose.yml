@@ -34,6 +34,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://promotion-db:3306/bookstore_promotion_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
+      BOOK_SERVICE_URL: http://book-service:8080
     depends_on:
       promotion-db:
         condition: service_healthy
