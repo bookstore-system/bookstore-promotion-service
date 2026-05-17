@@ -1,11 +1,11 @@
 services:
   promotion-db:
     image: mysql:8.0
-    container_name: bookstore_promotion_db
+    container_name: promotion-db
     ports:
       - "3307:3306"
     environment:
-      MYSQL_DATABASE: bookstore_promotion_db
+      MYSQL_DATABASE: promotion_db
       MYSQL_ROOT_PASSWORD: password
     volumes:
       - promotion-db-data:/var/lib/mysql
@@ -27,14 +27,16 @@ services:
     volumes:
       - .:/app
       - ~/.m2:/root/.m2
+      - ./key:/key:ro
     working_dir: /app
     command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:mysql://promotion-db:3306/bookstore_promotion_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://promotion-db:3306/promotion_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
       BOOK_SERVICE_URL: http://book-service:8080
+      APP_JWT_KEYS_DIR: /key
     depends_on:
       promotion-db:
         condition: service_healthy

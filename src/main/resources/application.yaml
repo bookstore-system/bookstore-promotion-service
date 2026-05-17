@@ -18,5 +18,7 @@ spring:
 server:
   port: 8080
 
-jwt:
-  signerKey: "1234567890123456789012345678901234567890123456789012345678901234"
+app:
+  jwt:
+    keys-dir: ${APP_JWT_KEYS_DIR:./key}
+    public-key-file: ${APP_JWT_PUBLIC_KEY_FILE:public.pem}
