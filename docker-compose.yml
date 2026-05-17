@@ -27,6 +27,7 @@ services:
     volumes:
       - .:/app
       - ~/.m2:/root/.m2
+      - ./key:/key:ro
     working_dir: /app
     command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
     environment:
@@ -35,6 +36,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
       BOOK_SERVICE_URL: http://book-service:8080
+      APP_JWT_KEYS_DIR: /key
     depends_on:
       promotion-db:
         condition: service_healthy
