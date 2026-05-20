@@ -2,6 +2,8 @@ package com.hamtech.bookstorepromotionservice.client;
 
 import com.hamtech.bookstorepromotionservice.BookstorePromotionServiceApplication;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
+import com.hamtech.bookstorepromotionservice.repository.PromotionReservationRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -23,12 +25,19 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.autoconfigure.exclude=" +
                 "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration," +
                 "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
-        "jwt.signerKey=unit-test-signer-key"
+        "jwt.signerKey=unit-test-signer-key",
+        "spring.rabbitmq.listener.simple.auto-startup=false"
 })
 class BookServiceClientTest {
 
     @MockBean
     PromotionRepository promotionRepository;
+
+    @MockBean
+    PromotionReservationRepository promotionReservationRepository;
+
+    @MockBean
+    RabbitTemplate rabbitTemplate;
 
     static MockWebServer mockWebServer;
 
