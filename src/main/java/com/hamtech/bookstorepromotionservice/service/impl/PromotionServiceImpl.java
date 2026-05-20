@@ -13,7 +13,9 @@ import com.hamtech.bookstorepromotionservice.model.dto.response.promotionrespons
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
 import com.hamtech.bookstorepromotionservice.model.entity.Promotion;
+import com.hamtech.bookstorepromotionservice.model.entity.PromotionReservation;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
+import com.hamtech.bookstorepromotionservice.repository.PromotionReservationRepository;
 import com.hamtech.bookstorepromotionservice.service.PromotionService;
 import feign.FeignException;
 import lombok.AccessLevel;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 public class PromotionServiceImpl implements PromotionService {
 
     PromotionRepository promotionRepository;
+    PromotionReservationRepository reservationRepository;
     BookServiceClient bookServiceClient;
 
     @Override
@@ -200,8 +203,8 @@ public class PromotionServiceImpl implements PromotionService {
                     .build();
         }
 
-        // Kiểm tra số lượt sử dụng
-        if (promotion.getUsageCount() >= promotion.getUsageLimit()) {
+        // Kiểm tra số lượt sử dụng (bao gồm các lượt đang giữ trong saga, không tạo reservation)
+        if (!hasAvailableUsageForPreview(promotion)) {
             return PromotionValidationResponse.builder()
                     .isValid(false)
                     .message("Mã khuyến mãi đã hết lượt sử dụng")
@@ -290,7 +293,7 @@ public class PromotionServiceImpl implements PromotionService {
                     .build();
         }
 
-        if (promotion.getUsageCount() >= promotion.getUsageLimit()) {
+        if (!hasAvailableUsageForPreview(promotion)) {
             return ApplyPromotionResponse.builder()
                     .isValid(false)
                     .message("Mã khuyến mãi đã hết lượt sử dụng")
@@ -346,6 +349,15 @@ public class PromotionServiceImpl implements PromotionService {
             log.warn("Book service checkBookExists failed: status={} message={}", e.status(), e.getMessage());
             throw new AppException(ErrorCode.SERVICE_UNAVAILABLE);
         }
+    }
+
+    /**
+     * Preview/validate: phản ánh lượt đang giữ trong checkout saga nhưng không tạo reservation.
+     */
+    private boolean hasAvailableUsageForPreview(Promotion promotion) {
+        long reserved = reservationRepository.countByPromotionIdAndStatus(
+                promotion.getPromotionID(), PromotionReservation.Status.RESERVED);
+        return promotion.getUsageCount() + reserved < promotion.getUsageLimit();
     }
 
     private PromotionResponse mapToResponse(Promotion promotion) {
