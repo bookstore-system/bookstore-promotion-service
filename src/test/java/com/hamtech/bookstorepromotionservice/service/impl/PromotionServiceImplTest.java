@@ -8,7 +8,9 @@ import com.hamtech.bookstorepromotionservice.exception.ErrorCode;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.entity.Promotion;
+import com.hamtech.bookstorepromotionservice.model.entity.PromotionReservation;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
+import com.hamtech.bookstorepromotionservice.repository.PromotionReservationRepository;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -39,6 +41,9 @@ class PromotionServiceImplTest {
 
     @Mock
     PromotionRepository promotionRepository;
+
+    @Mock
+    PromotionReservationRepository reservationRepository;
 
     @Mock
     BookServiceClient bookServiceClient;
