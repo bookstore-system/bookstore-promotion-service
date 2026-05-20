@@ -235,12 +235,13 @@ public class PromotionController {
         }
 
         /**
-         * Áp dụng mã khuyến mãi cho đơn hàng (Dành cho Order Service)
+         * Xem trước mức giảm giá (preview) — không giữ lượt sử dụng.
+         * Trong checkout saga, orchestrator gửi {@code promotion.reserve.command} để giữ mã thật.
          *
          * @param request Thông tin mã KM và đơn hàng
          * @return Kết quả hợp lệ và số tiền giảm giá
          */
-        @Operation(summary = "Áp dụng mã khi tính đơn", description = "Gọi từ Order Service hoặc luồng nội bộ: trả về số tiền giảm nếu hợp lệ.")
+        @Operation(summary = "Preview mã khi tính đơn", description = "Chỉ xem trước giảm giá; không tạo reservation. Saga dùng RabbitMQ reserve/confirm/release.")
         @PostMapping("/apply")
         public ApiResponse<ApplyPromotionResponse> applyPromotion(
                         @Valid @RequestBody ApplyPromotionRequest request) {
