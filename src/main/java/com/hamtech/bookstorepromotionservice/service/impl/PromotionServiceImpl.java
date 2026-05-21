@@ -9,6 +9,7 @@ import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ValidatePromotionCodeRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.messaging.PromotionCreatedEvent;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
@@ -24,6 +25,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,7 @@ public class PromotionServiceImpl implements PromotionService {
     PromotionRepository promotionRepository;
     PromotionReservationRepository reservationRepository;
     BookServiceClient bookServiceClient;
+    ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -82,6 +85,7 @@ public class PromotionServiceImpl implements PromotionService {
         promotion.setApplicableBookIds(applicableIds);
 
         Promotion saved = promotionRepository.save(promotion);
+        applicationEventPublisher.publishEvent(toPromotionCreatedEvent(saved));
         return mapToResponse(saved);
     }
 
@@ -374,6 +378,19 @@ public class PromotionServiceImpl implements PromotionService {
                 .status(promotion.getStatus().name())
                 .applicableBookIds(promotion.getApplicableBookIds())
                 .isValid(promotion.isValid())
+                .build();
+    }
+
+    private PromotionCreatedEvent toPromotionCreatedEvent(Promotion promotion) {
+        return PromotionCreatedEvent.builder()
+                .promotionId(promotion.getPromotionID())
+                .code(promotion.getCode())
+                .name(promotion.getName())
+                .description(promotion.getDescription())
+                .discountValue(promotion.getDiscountValue())
+                .startDate(promotion.getStartDate())
+                .endDate(promotion.getEndDate())
+                .status(promotion.getStatus() != null ? promotion.getStatus().name() : null)
                 .build();
     }
 }
