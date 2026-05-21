@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -48,6 +49,9 @@ class PromotionServiceImplTest {
     @Mock
     BookServiceClient bookServiceClient;
 
+    @Mock
+    ApplicationEventPublisher applicationEventPublisher;
+
     @InjectMocks
     PromotionServiceImpl promotionService;
 
@@ -72,6 +76,7 @@ class PromotionServiceImplTest {
 
         verifyNoInteractions(bookServiceClient);
         verify(promotionRepository).save(any(Promotion.class));
+        verify(applicationEventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
