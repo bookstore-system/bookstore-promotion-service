@@ -9,11 +9,14 @@ import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ValidatePromotionCodeRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.ApplyPromotionRequest;
+import com.hamtech.bookstorepromotionservice.model.dto.messaging.PromotionCreatedEvent;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.ApplyPromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionResponse;
 import com.hamtech.bookstorepromotionservice.model.dto.response.promotionresponse.PromotionValidationResponse;
 import com.hamtech.bookstorepromotionservice.model.entity.Promotion;
+import com.hamtech.bookstorepromotionservice.model.entity.PromotionReservation;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
+import com.hamtech.bookstorepromotionservice.repository.PromotionReservationRepository;
 import com.hamtech.bookstorepromotionservice.service.PromotionService;
 import feign.FeignException;
 import lombok.AccessLevel;
@@ -22,6 +25,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +43,9 @@ import java.util.stream.Collectors;
 public class PromotionServiceImpl implements PromotionService {
 
     PromotionRepository promotionRepository;
+    PromotionReservationRepository reservationRepository;
     BookServiceClient bookServiceClient;
+    ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -79,6 +85,7 @@ public class PromotionServiceImpl implements PromotionService {
         promotion.setApplicableBookIds(applicableIds);
 
         Promotion saved = promotionRepository.save(promotion);
+        applicationEventPublisher.publishEvent(toPromotionCreatedEvent(saved));
         return mapToResponse(saved);
     }
 
@@ -200,8 +207,8 @@ public class PromotionServiceImpl implements PromotionService {
                     .build();
         }
 
-        // Kiểm tra số lượt sử dụng
-        if (promotion.getUsageCount() >= promotion.getUsageLimit()) {
+        // Kiểm tra số lượt sử dụng (bao gồm các lượt đang giữ trong saga, không tạo reservation)
+        if (!hasAvailableUsageForPreview(promotion)) {
             return PromotionValidationResponse.builder()
                     .isValid(false)
                     .message("Mã khuyến mãi đã hết lượt sử dụng")
@@ -290,7 +297,7 @@ public class PromotionServiceImpl implements PromotionService {
                     .build();
         }
 
-        if (promotion.getUsageCount() >= promotion.getUsageLimit()) {
+        if (!hasAvailableUsageForPreview(promotion)) {
             return ApplyPromotionResponse.builder()
                     .isValid(false)
                     .message("Mã khuyến mãi đã hết lượt sử dụng")
@@ -348,6 +355,15 @@ public class PromotionServiceImpl implements PromotionService {
         }
     }
 
+    /**
+     * Preview/validate: phản ánh lượt đang giữ trong checkout saga nhưng không tạo reservation.
+     */
+    private boolean hasAvailableUsageForPreview(Promotion promotion) {
+        long reserved = reservationRepository.countByPromotionIdAndStatus(
+                promotion.getPromotionID(), PromotionReservation.Status.RESERVED);
+        return promotion.getUsageCount() + reserved < promotion.getUsageLimit();
+    }
+
     private PromotionResponse mapToResponse(Promotion promotion) {
         return PromotionResponse.builder()
                 .promotionID(promotion.getPromotionID())
@@ -362,6 +378,19 @@ public class PromotionServiceImpl implements PromotionService {
                 .status(promotion.getStatus().name())
                 .applicableBookIds(promotion.getApplicableBookIds())
                 .isValid(promotion.isValid())
+                .build();
+    }
+
+    private PromotionCreatedEvent toPromotionCreatedEvent(Promotion promotion) {
+        return PromotionCreatedEvent.builder()
+                .promotionId(promotion.getPromotionID())
+                .code(promotion.getCode())
+                .name(promotion.getName())
+                .description(promotion.getDescription())
+                .discountValue(promotion.getDiscountValue())
+                .startDate(promotion.getStartDate())
+                .endDate(promotion.getEndDate())
+                .status(promotion.getStatus() != null ? promotion.getStatus().name() : null)
                 .build();
     }
 }

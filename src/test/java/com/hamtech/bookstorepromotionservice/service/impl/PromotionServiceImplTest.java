@@ -8,7 +8,9 @@ import com.hamtech.bookstorepromotionservice.exception.ErrorCode;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.CreatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.dto.request.promotionrequest.UpdatePromotionRequest;
 import com.hamtech.bookstorepromotionservice.model.entity.Promotion;
+import com.hamtech.bookstorepromotionservice.model.entity.PromotionReservation;
 import com.hamtech.bookstorepromotionservice.repository.PromotionRepository;
+import com.hamtech.bookstorepromotionservice.repository.PromotionReservationRepository;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -41,7 +44,13 @@ class PromotionServiceImplTest {
     PromotionRepository promotionRepository;
 
     @Mock
+    PromotionReservationRepository reservationRepository;
+
+    @Mock
     BookServiceClient bookServiceClient;
+
+    @Mock
+    ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     PromotionServiceImpl promotionService;
@@ -67,6 +76,7 @@ class PromotionServiceImplTest {
 
         verifyNoInteractions(bookServiceClient);
         verify(promotionRepository).save(any(Promotion.class));
+        verify(applicationEventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
