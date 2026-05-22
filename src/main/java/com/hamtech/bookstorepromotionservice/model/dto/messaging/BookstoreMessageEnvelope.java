@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -19,7 +18,7 @@ public class BookstoreMessageEnvelope {
     String correlationId;
     String causationId;
     String type;
-    Instant occurredAt;
+    String occurredAt;
     UUID orderId;
     String userId;
     JsonNode payload;

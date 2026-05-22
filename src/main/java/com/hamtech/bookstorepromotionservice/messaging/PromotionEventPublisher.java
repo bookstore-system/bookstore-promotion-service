@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -33,7 +33,7 @@ public class PromotionEventPublisher {
             body.put("causationId", source.getCausationId());
         }
         body.put("type", routingKey);
-        body.put("occurredAt", Instant.now().toString());
+        body.put("occurredAt", LocalDateTime.now().toString());
         if (source.getOrderId() != null) {
             body.put("orderId", source.getOrderId().toString());
         }
