@@ -1,0 +1,26 @@
+@host = http://localhost:8086
+@userId = 7c6e9c8a-2a3f-4c11-9f3c-6b4f5f4a1d11
+
+### 1. Tạo khuyến mãi mới (để test)
+POST {{host}}/api/v1/promotions
+Content-Type: application/json
+
+{
+  "name": "Khuyến mãi mùa hè",
+  "code": "SUMMER20",
+  "description": "Giảm giá 10% cho mùa hè",
+  "discountPercent": 10.0,
+  "startDate": "2026-05-01",
+  "endDate": "2026-08-31",
+  "usageLimit": 100
+}
+
+### 2. Áp dụng mã khuyến mãi (API mới tạo cho Order Service)
+POST {{host}}/api/v1/promotions/apply
+Content-Type: application/json
+
+{
+  "code": "SUMMER20",
+  "userId": "{{userId}}",
+  "orderTotalBeforeDiscount": 500000 
+}

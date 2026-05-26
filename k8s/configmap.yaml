@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promotion-service-config
+data:
+  SPRING_DATASOURCE_URL: "jdbc:mysql://bookstore-db-do-user-36177370-0.h.db.ondigitalocean.com:25060/bookstore_promotion?useSSL=true&requireSSL=true&serverTimezone=UTC"
+  SPRING_RABBITMQ_HOST: "rabbitmq"
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_RABBITMQ_USERNAME: "guest"
+  BOOK_SERVICE_URL: "http://book-service:8080"

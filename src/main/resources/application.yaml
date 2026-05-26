@@ -1,3 +1,11 @@
 spring:
   application:
     name: bookstore-promotion-service
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    keys-dir: ${APP_JWT_KEYS_DIR:./key}
+    public-key-file: ${APP_JWT_PUBLIC_KEY_FILE:public.pem}
