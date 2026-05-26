@@ -62,6 +62,11 @@ spec:
             secretKeyRef:
               name: promotion-service-secret
               key: SPRING_RABBITMQ_PASSWORD
+        - name: SPRING_RABBITMQ_VIRTUAL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: promotion-service-config
+              key: SPRING_RABBITMQ_VIRTUAL_HOST
         - name: CLIENTS_BOOK_SERVICE_URL
           valueFrom:
             configMapKeyRef:
