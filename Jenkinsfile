@@ -58,9 +58,9 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'db-creds', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD'),
+                    usernamePassword(credentialsId: 'rabbitmq-cred', usernameVariable: 'RABBITMQ_USERNAME', passwordVariable: 'RABBITMQ_PASSWORD'),
                     file(credentialsId: 'jwt-private-pem', variable: 'JWT_PRIVATE_PEM'),
-                    file(credentialsId: 'jwt-public-pem', variable: 'JWT_PUBLIC_PEM'),
-                    string(credentialsId: 'rabbitmq-password', variable: 'SPRING_RABBITMQ_PASSWORD')
+                    file(credentialsId: 'jwt-public-pem', variable: 'JWT_PUBLIC_PEM')
                 ]) {
                     sh '''
                 export KUBECONFIG=/var/jenkins_home/.kube/config
@@ -72,7 +72,7 @@ pipeline {
                 kubectl create secret generic promotion-service-secret \
                   --from-literal=DB_USERNAME="$DB_USERNAME" \
                   --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-                  --from-literal=SPRING_RABBITMQ_PASSWORD="$SPRING_RABBITMQ_PASSWORD" \
+                  --from-literal=SPRING_RABBITMQ_PASSWORD="$RABBITMQ_PASSWORD" \
                   --dry-run=client -o yaml | kubectl apply -f -
 
                 kubectl create secret generic jwt-keys \
