@@ -98,6 +98,9 @@ public class SecurityConfig {
                                 "http://127.0.0.1:3000",
                                 "http://localhost:8080",
                                 "https://editor.swagger.io",
+                                "https://www.nhasachcongdong.id.vn",
+                                "https://nhasachcongdong.id.vn",
+                                "https://api.nhasachcongdong.id.vn",
                                 "https://*.swaggerhub.com"));
 
                 configuration.setAllowedMethods(Arrays.asList(
